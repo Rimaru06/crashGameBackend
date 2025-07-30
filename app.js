@@ -13,7 +13,7 @@ import gameEngine from './src/services/game-engine.js';
 import gameRoutes from './src/api/routes/game.route.js';
 
 const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const NODE_ENV = process.env.NODE_ENV || 'production';
 const app = express();
 
 // Security middleware for production
