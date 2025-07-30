@@ -9,9 +9,15 @@ class GameWebSocket {
     }
 
     initialize(server) {
-        this.wss = new WebSocketServer({ server });
+        this.wss = new WebSocketServer({ 
+            server,
+            // Render-specific optimizations
+            perMessageDeflate: false, // Disable compression for better performance on Render
+            maxPayload: 1024 * 1024 // 1MB max payload
+        });
 
         this.wss.on('connection', (ws, req) => {
+            console.log('New WebSocket connection from:', req.socket.remoteAddress);
 
             const sessionId = crypto.randomUUID();
 

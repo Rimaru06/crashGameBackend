@@ -4,7 +4,6 @@ const gameRoundSchema = new mongoose.Schema({
     roundNumber: {
         type: Number,
         required: true,
-        unique: true
     },
     seed: {
         type: String,
@@ -61,8 +60,5 @@ const gameRoundSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Create indexes manually
-gameRoundSchema.index({ roundNumber: 1 }, { unique: true });
-gameRoundSchema.index({ status: 1 });
 
 export default mongoose.model('GameRound', gameRoundSchema);
