@@ -6,6 +6,7 @@ class GameWebSocket {
     constructor() {
         this.wss = null;
         this.clients = new Map(); 
+        this.crashProcessed = false; // Flag to prevent multiple crash processing
     }
 
     initialize(server) {
@@ -283,8 +284,12 @@ class GameWebSocket {
 
         // Handle game crash detection and broadcast
         setInterval(() => {
-            if (gameEngine.gameState === 'crashed') {
+            if (gameEngine.gameState === 'crashed' && !this.crashProcessed) {
                 console.log(`💥 Game crashed at ${gameEngine.multiplier.toFixed(2)}x`);
+                this.crashProcessed = true; // Mark crash as processed
+                
+                // Send bet_lost messages to players with active bets
+                this.sendBetLostMessages();
                 
                 this.broadcast({
                     type: 'game_state_update',
@@ -300,11 +305,38 @@ class GameWebSocket {
                 setTimeout(() => {
                     if (gameEngine.gameState === 'crashed') {
                         gameEngine.resetForNewRound();
+                        this.crashProcessed = false; // Reset flag for next round
                         console.log('🔄 Game reset to waiting state');
                     }
                 }, 3000);
             }
         }, 500);
+    }
+
+    sendBetLostMessages() {
+        if (!gameEngine.currentRound || !gameEngine.currentRound.activeBets) {
+            return;
+        }
+
+        // Find all players with active bets that weren't cashed out
+        const uncastedBets = gameEngine.currentRound.activeBets.filter(bet => !bet.cashedOut);
+        
+        for (const bet of uncastedBets) {
+            // Find the WebSocket connection for this session
+            for (const [ws, clientInfo] of this.clients.entries()) {
+                if (clientInfo.sessionId === bet.sessionId) {
+                    ws.send(JSON.stringify({
+                        type: 'bet_lost',
+                        data: {
+                            roundNumber: gameEngine.currentRound.roundNumber,
+                            crashPoint: gameEngine.currentRound.crashPoint,
+                            betAmount: bet.usdAmount
+                        }
+                    }));
+                    break;
+                }
+            }
+        }
     }
 
     broadcastGameState() {

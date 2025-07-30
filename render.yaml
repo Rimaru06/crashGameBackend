@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: crypto-crash-backend
+    env: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm run production
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://your-frontend-domain.com
+      - key: LOG_LEVEL
+        value: warn
+    healthCheckPath: /health
+    autoDeploy: true
+    branch: main
